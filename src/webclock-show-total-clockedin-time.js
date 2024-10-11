@@ -1,5 +1,5 @@
 //Convert to bookmarklet
-//Show Total Clocked-in Time (Bookmarklet)
+//Web Clock - Show Total Clocked-in Time (Bookmarklet)
 //https://caiorss.github.io/bookmarklet-maker/
 
 // Helper function to convert time string to Date object
@@ -54,6 +54,10 @@ function main(){
     // Get all the times from the table
     const clockInOutTimes = clockingTable.querySelectorAll('span');
     if(clockInOutTimes == null) return;
+
+    //Get the time display object
+    const timeDisplay = document.querySelector("[id$='digitalDuration']");
+    if(timeDisplay == null) return;
     
     //Add the clocking times to an array
     const clockingTimes = [];
@@ -63,8 +67,6 @@ function main(){
     
     const clockedInHours = calculateClockedInHours(clockingTimes);
     const niceTime = convertDecimalHoursToHoursMinutes(clockedInHours.toFixed(2));
-    
-    const timeDisplay = document.querySelector("[id$='digitalDuration']");
     timeDisplay.innerHTML += ` (Total clocked-in hours: ${niceTime})`;
 }
 
