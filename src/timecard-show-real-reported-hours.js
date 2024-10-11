@@ -2,7 +2,7 @@ const workingHoursPerDay='7';
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 
 //Convert to bookmarklet
-//Time Card - Show Real Total Time (Bookmarket)
+//Time Card - Show Real Reported Hours (Bookmarket)
 //https://caiorss.github.io/bookmarklet-maker/
 
 //Converts decimal hours (e.g. 8.75h) into days, hours and minutes (e.g. assuming a 7 hour working day that becomes: "1 days 1h 45m")
