@@ -1,22 +1,30 @@
-const workingHoursPerDay='7';
+console.log("Loading OracleHelpers v1...")
+
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
+const workingHoursPerDay='7';
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Decimal Hours to Days, Hours & minutes
 /////////////////////////////////////////////////////////////////////////////////////////
 
 //Define the day, hours and minutes tooltip appearance
-const tooltip = document.createElement('div');
-tooltip.style.fontFamily = 'sans-serif';
-tooltip.style.position = 'absolute';
-tooltip.style.backgroundColor = '#333';
-tooltip.style.color = '#fff';
-tooltip.style.padding = '5px';
-tooltip.style.borderRadius = '5px';
-tooltip.style.display = 'none';
-tooltip.style.zIndex = '100000000000000';
-tooltip.style.border = '1px solid white';
-document.body.appendChild(tooltip);
+const tooltipDefaults = document.createElement('div');
+tooltipDefaults.id = "tooltip";
+tooltipDefaults.style.fontFamily = 'sans-serif';
+tooltipDefaults.style.fontSize = "1.5em";
+tooltipDefaults.style.position = 'absolute';
+tooltipDefaults.style.backgroundColor = '#333';
+tooltipDefaults.style.color = '#fff';
+tooltipDefaults.style.padding = '5px';
+tooltipDefaults.style.borderRadius = '5px';
+tooltipDefaults.style.display = 'none';
+tooltipDefaults.style.zIndex = '100000000000000';
+tooltipDefaults.style.border = '1px solid white';
+
+// Append tooltip to the body if not already appended
+if (!document.body.contains(document.getElementById('tooltip'))) {
+    document.body.appendChild(tooltipDefaults);
+}
 
 //Gets the highlighted text on the page
 function getHighlightedTextAsNumber() {
@@ -51,29 +59,52 @@ function showTooltip(e) {
     const response = "";
     if (!isNaN(decimalHours)) {
         const daysHoursMinutesText = convertDecimalHoursToDaysHoursMinutes(decimalHours);
+        var tooltip = document.getElementById('tooltip');
         tooltip.innerHTML = `<small>${decimalHours}h is:</small><br/><strong>${daysHoursMinutesText}</strong><br/><small>(${workingHoursPerDay}h working day)</small>`;
         tooltip.style.left = `${e.pageX + 10}px`;
         tooltip.style.top = `${e.pageY + 10}px`;
         tooltip.style.display = 'block';
     } else {
+        var tooltip = document.getElementById('tooltip');
         tooltip.style.display = 'none';
     }
 }
 
 // Function to hide the tooltip
 function hideTooltip() {
+    var tooltip = document.getElementById('tooltip');
     tooltip.style.display = 'none';
+}
+
+function toolTip_addListeners() {
+    // Ensure event listeners are added only once
+    if (!window.tooltipListenersAdded) {
+        document.addEventListener('mousedown', hideTooltip);
+        document.addEventListener('mouseup', showTooltip);
+        window.tooltipListenersAdded = true;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Time Card - Show Accurate Reported Hours
 /////////////////////////////////////////////////////////////////////////////////////////
 
+//Get all the time values on the timecard
+function getAllTimesOnTimeCard(){
+    return document.querySelectorAll('.Apps4XLargeFontSize')
+}
+
 //Get the total number of hours
 function getTotalNumberOfHours(){
     var totalHours = 0;
-    document.querySelectorAll('.Apps4XLargeFontSize').forEach(function(time) {
-        totalHours += parseFloat(time.textContent);
+    getAllTimesOnTimeCard().forEach(function(timeObj) {
+         //Add to total hours count
+        totalHours += parseFloat(timeObj.innerHTML);
+        
+        //Update display to convert to hours and minutes
+        //This is done globally now by looking for all spans that contain numbers with decimal values
+        /*var hoursAndMinutes = convertDecimalHoursToHoursMinutes(timeObj.innerHTML);
+        timeObj.innerHTML = `(${hoursAndMinutes}) ` + timeObj.innerHTML*/
     });
     totalHours = parseFloat(parseFloat(totalHours).toFixed(2));
     return totalHours;
@@ -83,6 +114,9 @@ function timeCard_showAccurateReportedHours(){
     //Check if we can find the total value on the page
     var scoreboardDiv = document.querySelector("table[id$='dc_i1:1:dc_pgl11'] .scoreboard-value");
     if (scoreboardDiv == null) return;
+
+    //Check if we've already added the value so don't add again
+    if(scoreboardDiv.textContent.includes("(")) return;
 
     totalHoursDecimal = getTotalNumberOfHours();
     totalHoursDaysHouseMinutes = convertDecimalHoursToDaysHoursMinutes(totalHoursDecimal);
@@ -97,8 +131,17 @@ function timeCard_showAccurateReportedHours(){
 // Helper function to convert time string to Date object
 function timeStringToDate(timeString) {
     const now = new Date();
-    const [hours, minutes, seconds] = timeString.split(':').map(Number);
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+    let [time, period] = timeString.split(' ');
+    let [hours, minutes, seconds] = time.split(':').map(Number);
+
+    //Deal with the possibilty of time being presented like: "01:15 PM"
+    if (period === 'PM' && hours < 12) {
+        hours += 12;
+    }
+    if (period === 'AM' && hours === 12) {
+        hours = 0;
+    }
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
 }
 
 //Calculate the amount of clocked in time from an array of times
@@ -133,12 +176,30 @@ function calculateClockedInHours(times) {
 
 //Function to convert deciaml hours into readable hours and minutes
 function convertDecimalHoursToHoursMinutes(decimalHours) {
-    const hours = Math.floor(decimalHours);
+    /*const hours = Math.floor(decimalHours);
     const minutes = Math.round((decimalHours % 1) * 60);
-    return `${hours}h ${minutes}m`;
+    return `${hours}h ${minutes}m`;*/
+
+    const sign = decimalHours < 0 ? -1 : 1; 
+    const absoluteHours = Math.floor(Math.abs(decimalHours));
+    const absoluteMinutes = Math.round((Math.abs(decimalHours) % 1) * 60);
+    
+    const hours = absoluteHours * sign;
+    const minutes = absoluteMinutes * sign;
+
+    return `${hours}h ${Math.abs(minutes)}m`
 }
 
 function webClock_showTotalElaspedTime(){
+    const startString = " (Total clocked-in hours:";
+    
+    //Get the time display object
+    const timeDisplay = document.querySelector("[id$='digitalDuration']");
+    if(timeDisplay == null) return;
+
+    //Exit if we've already added it
+    if(timeDisplay.innerHTML.includes(startString)) return;
+    
     // Get clocking table in HTML
     const clockingTable = document.querySelector("[id$='PSErlt']");
     if(clockingTable == null) return;
@@ -146,11 +207,7 @@ function webClock_showTotalElaspedTime(){
     // Get all the times from the table
     const clockInOutTimes = clockingTable.querySelectorAll('span');
     if(clockInOutTimes == null) return;
-
-    //Get the time display object
-    const timeDisplay = document.querySelector("[id$='digitalDuration']");
-    if(timeDisplay == null) return;
-    
+   
     //Add the clocking times to an array
     const clockingTimes = [];
     clockInOutTimes.forEach(clockInOutTime => {
@@ -159,16 +216,28 @@ function webClock_showTotalElaspedTime(){
     
     const clockedInHours = calculateClockedInHours(clockingTimes);
     const niceTime = convertDecimalHoursToHoursMinutes(clockedInHours.toFixed(2));
-    timeDisplay.innerHTML += ` (Total clocked-in hours: ${niceTime})`;
+    timeDisplay.innerHTML += `${startString} ${niceTime})`;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// Globally change all decimal numbers to hours and minutes
+/////////////////////////////////////////////////////////////////////////////////////////
+function globalNumberChange(){
+    const decimalRegex = /^-?\d+\.\d+$/;
+    
+    document.querySelectorAll('span, div').forEach(span => {
+        if (decimalRegex.test(span.innerHTML)) {
+            var hoursAndMinutes = convertDecimalHoursToHoursMinutes(span.innerHTML);
+            span.innerHTML = `&nbsp;(${hoursAndMinutes})&nbsp;` + span.innerHTML;
+        }
+    });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Start Processes
 /////////////////////////////////////////////////////////////////////////////////////////
 
+toolTip_addListeners();
 timeCard_showAccurateReportedHours();
 webClock_showTotalElaspedTime();
-
-// Add event listeners for tooltips
-document.addEventListener('mouseup', showTooltip);
-document.addEventListener('mousedown', hideTooltip);
+globalNumberChange();
