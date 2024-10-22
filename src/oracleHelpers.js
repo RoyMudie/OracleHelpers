@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v1...")
+console.log("Loading OracleHelpers v2...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -100,15 +100,11 @@ function getTotalNumberOfHours(){
     getAllTimesOnTimeCard().forEach(function(timeObj) {
          //Add to total hours count
         totalHours += parseFloat(timeObj.innerHTML);
-        
-        //Update display to convert to hours and minutes
-        //This is done globally now by looking for all spans that contain numbers with decimal values
-        /*var hoursAndMinutes = convertDecimalHoursToHoursMinutes(timeObj.innerHTML);
-        timeObj.innerHTML = `(${hoursAndMinutes}) ` + timeObj.innerHTML*/
     });
     totalHours = parseFloat(parseFloat(totalHours).toFixed(2));
     return totalHours;
 }
+
 
 function timeCard_showAccurateReportedHours(){
     //Check if we can find the total value on the page
@@ -124,6 +120,52 @@ function timeCard_showAccurateReportedHours(){
     scoreboardDiv.textContent += ` (${totalHoursDecimal}h or ${totalHoursDaysHouseMinutes})`; 
 }
 
+//Show the total number of hours worked on a day on the timecard page
+function timeCard_dailyHoursTotal(){
+
+    //Get all the date rows
+    const dateRows = document.querySelectorAll('.xjb td');
+    //If there's no date rows exit so we don't processes unnessecarly
+    if (dateRows == null || dateRows.length == 0) return;
+    
+    const totalHoursByDate = {};
+
+    //Get all the hours and add them up for each date
+    dateRows.forEach(container => {
+        // Find the date and hours elements
+        const dateElement = container.querySelector('.xng td');
+        const hoursElement = container.querySelector('span');
+    
+        if (dateElement && hoursElement) {
+            const date = dateElement.textContent.trim();
+            const hours = parseFloat(hoursElement.textContent.trim());
+    
+            // Add the hours to the total for this date
+            if (totalHoursByDate[date]) {
+                totalHoursByDate[date] += hours;
+            } else {
+                totalHoursByDate[date] = hours;
+            }
+        }
+    });
+
+    //Store which dates we've updated so we don't add it to every date, just the first one
+    const updatedDates = new Set();
+
+    // Update the date elements with the total hours
+    dateRows.forEach(container => {
+        const dateElement = container.querySelector('.xng td');
+        if (dateElement) {
+            const date = dateElement.textContent.trim();
+            if (totalHoursByDate[date] && !updatedDates.has(date)) {
+                var totalDayDecimalHours = totalHoursByDate[date].toFixed(2)
+                var totalDayHoursAndMinutes = convertDecimalHoursToHoursMinutes(totalDayDecimalHours);
+                dateElement.textContent = `${date} (Total: ${totalDayDecimalHours} hours or ${totalDayHoursAndMinutes})`;
+                updatedDates.add(date);
+            }
+        }
+    });
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 // Web Clock - Show Total Elasped Time
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -238,6 +280,7 @@ function globalNumberChange(){
 /////////////////////////////////////////////////////////////////////////////////////////
 
 toolTip_addListeners();
+timeCard_dailyHoursTotal();
 timeCard_showAccurateReportedHours();
 webClock_showTotalElaspedTime();
 globalNumberChange();
