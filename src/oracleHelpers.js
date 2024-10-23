@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v2...")
+console.log("Loading OracleHelpers v3...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -7,22 +7,23 @@ const workingHoursPerDay='7';
 // Decimal Hours to Days, Hours & minutes
 /////////////////////////////////////////////////////////////////////////////////////////
 
-//Define the day, hours and minutes tooltip appearance
-const tooltipDefaults = document.createElement('div');
-tooltipDefaults.id = "tooltip";
-tooltipDefaults.style.fontFamily = 'sans-serif';
-tooltipDefaults.style.fontSize = "1.5em";
-tooltipDefaults.style.position = 'absolute';
-tooltipDefaults.style.backgroundColor = '#333';
-tooltipDefaults.style.color = '#fff';
-tooltipDefaults.style.padding = '5px';
-tooltipDefaults.style.borderRadius = '5px';
-tooltipDefaults.style.display = 'none';
-tooltipDefaults.style.zIndex = '100000000000000';
-tooltipDefaults.style.border = '1px solid white';
-
 // Append tooltip to the body if not already appended
-if (!document.body.contains(document.getElementById('tooltip'))) {
+if (!document.body.contains(document.getElementById('calculator-tooltip'))) {
+
+    //Define the day, hours and minutes tooltip appearance
+    const tooltipDefaults = document.createElement('div');
+    tooltipDefaults.id = "calculator-tooltip";
+    tooltipDefaults.style.fontFamily = 'sans-serif';
+    tooltipDefaults.style.fontSize = "1.5em";
+    tooltipDefaults.style.position = 'absolute';
+    tooltipDefaults.style.backgroundColor = '#333';
+    tooltipDefaults.style.color = '#fff';
+    tooltipDefaults.style.padding = '5px';
+    tooltipDefaults.style.borderRadius = '5px';
+    tooltipDefaults.style.display = 'none';
+    tooltipDefaults.style.zIndex = '100000000000000';
+    tooltipDefaults.style.border = '1px solid white';
+    
     document.body.appendChild(tooltipDefaults);
 }
 
@@ -57,23 +58,22 @@ function convertDecimalHoursToDaysHoursMinutes(decimalHours) {
 function showTooltip(e) {
     const decimalHours = getHighlightedTextAsNumber();
     const response = "";
+    var calculatorTooltip = document.getElementById('calculator-tooltip');
     if (!isNaN(decimalHours)) {
         const daysHoursMinutesText = convertDecimalHoursToDaysHoursMinutes(decimalHours);
-        var tooltip = document.getElementById('tooltip');
-        tooltip.innerHTML = `<small>${decimalHours}h is:</small><br/><strong>${daysHoursMinutesText}</strong><br/><small>(${workingHoursPerDay}h working day)</small>`;
-        tooltip.style.left = `${e.pageX + 10}px`;
-        tooltip.style.top = `${e.pageY + 10}px`;
-        tooltip.style.display = 'block';
+        calculatorTooltip.innerHTML = `<small>${decimalHours}h is:</small><br/><strong>${daysHoursMinutesText}</strong><br/><small>(${workingHoursPerDay}h working day)</small>`;
+        calculatorTooltip.style.left = `${e.pageX + 10}px`;
+        calculatorTooltip.style.top = `${e.pageY + 10}px`;
+        calculatorTooltip.style.display = 'block';
     } else {
-        var tooltip = document.getElementById('tooltip');
-        tooltip.style.display = 'none';
+        calculatorTooltip.style.display = 'none';
     }
 }
 
 // Function to hide the tooltip
 function hideTooltip() {
-    var tooltip = document.getElementById('tooltip');
-    tooltip.style.display = 'none';
+    var calculatorTooltip = document.getElementById('calculator-tooltip');
+    calculatorTooltip.style.display = 'none';
 }
 
 function toolTip_addListeners() {
@@ -86,7 +86,7 @@ function toolTip_addListeners() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// Time Card - Show Accurate Reported Hours
+// Time Card
 /////////////////////////////////////////////////////////////////////////////////////////
 
 //Get all the time values on the timecard
@@ -105,7 +105,7 @@ function getTotalNumberOfHours(){
     return totalHours;
 }
 
-
+//Show the accurate total number of reported hours rather than rounded to a whole number
 function timeCard_showAccurateReportedHours(){
     //Check if we can find the total value on the page
     var scoreboardDiv = document.querySelector("table[id$='dc_i1:1:dc_pgl11'] .scoreboard-value");
@@ -167,7 +167,7 @@ function timeCard_dailyHoursTotal(){
     });
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-// Web Clock - Show Total Elasped Time
+// Web Clock
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Helper function to convert time string to Date object
@@ -232,6 +232,7 @@ function convertDecimalHoursToHoursMinutes(decimalHours) {
     return `${hours}h ${Math.abs(minutes)}m`
 }
 
+// Show Total Elasped Time on Webclock page
 function webClock_showTotalElaspedTime(){
     const startString = " (Total clocked-in hours:";
     
@@ -276,6 +277,261 @@ function globalNumberChange(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+// Existing Absences
+/////////////////////////////////////////////////////////////////////////////////////////
+
+//Function to add the calendar elements to the DOM
+function addCalendarDom(){
+    // Only add calendar objects to DOM if not already added
+    if (!document.body.contains(document.getElementById('calendar-style'))) {
+    
+        //Create the calendar styling
+        const calendarStyle = document.createElement('style');
+        calendarStyle.id = "calendar-style";
+        calendarStyle.textContent = `
+            #calendar-container table {
+                border-collapse: collapse;
+                margin: 20px;
+                background-color: #fff;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            #calendar-container th, #calendar-container td {
+                padding: 5px;
+                text-align: center;
+                border: 1px solid #ddd;
+            }
+            #calendar-container th {
+                background-color: #333;
+                color: #fff;
+            }
+            #calendar-container caption {
+                font-size: 1.5em;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            #calendar-container .weekend { background-color: #f0f0f0; /*light grey */ }
+            #calendar-container .other-leave { background-color: #A0A0A0; /*dark grey */ }
+            #calendar-container .annual-leave { background-color: #c8e6c9; /* light green */ }
+            #calendar-container .flexi-leave { background-color: #ffecb3; /* light yellow */ }
+            #calendar-container .public-holidays { background-color: #b3e5fc; /* light blue */ }
+            #calendar-container .sickness-leave { background-color: #ffcdd2; /* light red */ }
+            
+            #calendar-popup {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: #fff;
+                border: 1px solid #ddd;
+                box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                display: none;
+                z-index: 1000;
+                padding: 20px;
+                max-width: 90vw;
+                max-height: 90vh;
+                overflow: auto;
+            }
+            #calendar-popup-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                cursor: pointer;
+                font-size: 2em;
+                font-weight: bold;
+            }
+            #showCalendar {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+            #calendar-tooltip {
+                position: absolute;
+                background-color: #333;
+                color: #fff;
+                padding: 5px;
+                border-radius: 5px;
+                display: none;
+                z-index: 1001;
+                pointer-events: none;
+                font-size: 1.5em;
+                text-transform: capitalize;
+                border: 1px solid #fff;
+            }
+        `;
+        document.body.appendChild(calendarStyle);
+    
+        //Create the calendar popup
+        const calendarPopup = document.createElement('div');
+        calendarPopup.id = 'calendar-popup';
+        const calendarPopupClose = document.createElement('div');
+        calendarPopupClose.id = 'calendar-popup-close';
+        calendarPopupClose.textContent = '×';
+        calendarPopup.appendChild(calendarPopupClose);
+        const calendarContainer = document.createElement('div');
+        calendarContainer.id = 'calendar-container';
+        calendarPopup.appendChild(calendarContainer);
+        document.body.appendChild(calendarPopup);
+    
+        //Create the calendar tooltip
+        const calendarTooltip = document.createElement('div');
+        calendarTooltip.id= 'calendar-tooltip';
+        document.body.appendChild(calendarTooltip);
+    
+        //Add event listener for close
+        calendarPopupClose.addEventListener('click', () => {
+            calendarPopup.style.display = 'none';
+        });
+    }
+}
+
+function createCompactCalendar(year, leaveDates) {
+
+    //Clear the calendar object
+    var calendarContainer = document.getElementById('calendar-container');
+    calendarContainer.innerHTML = '';
+
+    //Add the intro/header
+    const header = document.createElement('h2');
+    header.innerHTML = "Existing Absences Yearly Calendar";
+    calendarContainer.append(header);
+    const intro = document.createElement('p');
+    intro.innerHTML = "This calendar will only display the absences loaded in the table. Please ensure 'all' is selected from the date range and that all absences have been loaded by clicking 'Load More Items' as many times are required.";
+    calendarContainer.append(intro);
+    
+    var longestMonth = 0;
+    const table = document.createElement('table');
+
+    //For each month...
+    for (let month = 0; month < 12; month++) {
+
+        //Create the day cells
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        const row = document.createElement('tr');
+        const monthCell = document.createElement('td');
+        monthCell.textContent = new Date(year, month).toLocaleString('default', { month: 'long' });
+        row.appendChild(monthCell);
+        //Appdend empty cells at the start to make them the same length and line up the day columns
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('td');
+            row.appendChild(emptyCell);
+        }
+        //For each date
+        for (let date = 1; date <= lastDate; date++) {
+            const dayCell = document.createElement('td');
+            dayCell.textContent = date;
+            const dateString = `${year}/${month+1}/${date}`;
+            //If there's any absence then add a tooltip
+            if (leaveDates[dateString]) {
+                leaveDates[dateString].forEach(leave => {
+                    dayCell.classList.add(leave.class);
+                });
+                dayCell.dataset.tooltip = leaveDates[dateString].map(leave => `${leave.type}: ${leave.start} - ${leave.end}`).join('<br />');
+                
+                var calendarTooltip = document.getElementById('calendar-tooltip');
+                dayCell.addEventListener('mouseenter', function(e) {
+                    calendarTooltip.innerHTML = this.dataset.tooltip;
+                    calendarTooltip.style.left = `${e.pageX + 10}px`;
+                    calendarTooltip.style.top = `${e.pageY + 10}px`;
+                    calendarTooltip.style.display = 'block';
+                });
+                dayCell.addEventListener('mouseleave', function() {
+                    calendarTooltip.style.display = 'none';
+                });
+            }
+            //Style for Saturdays and Sundays
+            if ((firstDay + date - 1) % 7 === 0 || (firstDay + date - 1) % 7 === 6) {
+                dayCell.classList.add('weekend');  
+            }
+            row.appendChild(dayCell);
+        }
+        while (row.children.length < 8) {
+            const emptyCell = document.createElement('td');
+            row.appendChild(emptyCell);
+        }
+        
+        //Get the longest month to know how many day columns to add
+        if(row.children.length > longestMonth) {
+            longestMonth = row.children.length - 1;
+        }
+        table.appendChild(row);
+    }
+    
+    // Add headers for each day
+    const headerRow = document.createElement('tr');
+    const monthHeader = document.createElement('th');
+    monthHeader.textContent = 'Month';
+    headerRow.appendChild(monthHeader);
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 0; i < longestMonth; i++) {
+        const dayCell = document.createElement('th');
+        dayCell.textContent = daysOfWeek[i % 7];
+        headerRow.appendChild(dayCell);
+    }
+    table.insertBefore(headerRow, table.firstChild);
+    calendarContainer.appendChild(table);
+}
+
+//Get the leave dates from the table of absences
+function parseLeaveDates() {
+    const leaveDates = {};
+    //Get all the absences rows
+    const rows = document.querySelectorAll('.xjb');
+    //For each absence row
+    rows.forEach(row => {
+        //Get the type of leave
+        const leaveType = row.querySelector('.x2ku')?.textContent.toLowerCase();
+        //Add class bvased on type of leave
+        const leaveClass = leaveType.includes('annual leave') ? 'annual-leave' :
+                          leaveType.includes('flexi leave') ? 'flexi-leave' :
+                          leaveType.includes('public & privilege holidays') ? 'public-holidays' :
+                          leaveType.includes('sickness leave') ? 'sickness-leave' : 
+                          leaveType.includes('hours') ? 'other-leave' : 
+                          '';
+        if (leaveClass) {
+            //If we have identified an absence
+            const dateSpans = row.querySelectorAll('.x2vz');
+            const startDate = new Date(dateSpans[0]?.textContent);
+            const endDate = new Date(dateSpans[dateSpans.length - 1]?.textContent);
+            //Create absences for all the dates in between the dates a well
+            for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+                const date = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+                if (!leaveDates[date]) {
+                    leaveDates[date] = [];
+                }
+                leaveDates[date].push({
+                    class: leaveClass,
+                    type: leaveType,
+                    start: startDate.toLocaleDateString(),
+                    end: endDate.toLocaleDateString()
+                });
+            }
+        }
+    });
+    return leaveDates;
+}
+
+//Show the existing absences yearly calendar
+function existingAbsences_showCalendar(){
+    //Add calendar dom elements if they don't exist
+    addCalendarDom();
+    
+    //Check if we're already displaying the calendar, and if so, exit;
+    var calendarPopup = document.getElementById('calendar-popup');
+    if(calendarPopup.style.display == 'block') return;
+    
+    //Get the current year
+    const currentYear = new Date().getFullYear();
+    //Get all the leave dates
+    const leaveDates = parseLeaveDates();
+
+    //Create the calendar and display it
+    createCompactCalendar(currentYear, leaveDates);   
+    calendarPopup.style.display = 'block';       
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 // Start Processes
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -284,3 +540,10 @@ timeCard_dailyHoursTotal();
 timeCard_showAccurateReportedHours();
 webClock_showTotalElaspedTime();
 globalNumberChange();
+
+//Calendar is a big so only do this if on the Existing Absences page
+document.querySelectorAll('h1').forEach(header => {
+    if (header.innerHTML.includes("Existing Absences")) {
+        existingAbsences_showCalendar();
+    }
+});
