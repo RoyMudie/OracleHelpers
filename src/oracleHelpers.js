@@ -492,8 +492,30 @@ function parseLeaveDates() {
         if (leaveClass) {
             //If we have identified an absence
             const dateSpans = row.querySelectorAll('.x2vz');
-            const startDate = new Date(dateSpans[0]?.textContent);
-            const endDate = new Date(dateSpans[dateSpans.length - 1]?.textContent);
+
+            //Parse the start and end dates basd on the format
+            const startDateString = dateSpans[0]?.textContent;
+            const endDateString = dateSpans[dateSpans.length - 1]?.textContent;
+            var startDate = null;
+            var endDate = null;
+            if(startDateString.length <= 8){
+                var dateSplit = startDateString.split("/");
+                var d = parseInt(dateSplit[0], 10);
+                var m = parseInt(dateSplit[1], 10);
+                var y = parseInt(dateSplit[2], 10);
+                startDate = new Date(y + 2000, m - 1, d);
+
+                dateSplit = endDateString.split("/");
+                var d = parseInt(dateSplit[0], 10);
+                var m = parseInt(dateSplit[1], 10);
+                var y = parseInt(dateSplit[2], 10);
+                endDate = new Date(y + 2000, m - 1, d);
+            }
+            else{
+                startDate = new Date(dateSpans[0]?.textContent);
+                endDate = new Date(dateSpans[dateSpans.length - 1]?.textContent);                
+            }
+
             //Create absences for all the dates in between the dates a well
             for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
                 const date = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
@@ -503,8 +525,8 @@ function parseLeaveDates() {
                 leaveDates[date].push({
                     class: leaveClass,
                     type: leaveType,
-                    start: startDate.toLocaleDateString(),
-                    end: endDate.toLocaleDateString()
+                    start: startDateString,
+                    end: endDateString
                 });
             }
         }
