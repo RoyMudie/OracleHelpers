@@ -315,7 +315,7 @@ function addCalendarDom(){
             #calendar-container .flexi-leave { background-color: #ffecb3; /* light yellow */ }
             #calendar-container .public-holidays { background-color: #b3e5fc; /* light blue */ }
             #calendar-container .sickness-leave { background-color: #ffcdd2; /* light red */ }
-            
+            #calendar-container .today { font-weight: bold; font-size: 1.6em; padding: 0px; }
             #calendar-popup {
                 position: fixed;
                 top: 50%;
@@ -357,6 +357,21 @@ function addCalendarDom(){
                 font-size: 1.5em;
                 text-transform: capitalize;
                 border: 1px solid #fff;
+            }
+            #calendar-legend {
+                margin-top: 20px;
+                display: flex;
+                border: 0px;
+            }
+            .calendar-legend-item {
+                margin-right: 20px;
+                display: flex;
+                align-items: center;
+            }
+            .calendar-legend-color {
+                width: 20px;
+                height: 20px;
+                margin-right: 5px;
             }
         `;
         document.body.appendChild(calendarStyle);
@@ -401,7 +416,8 @@ function createCompactCalendar(year, leaveDates) {
     
     var longestMonth = 0;
     const table = document.createElement('table');
-
+    const today = new Date(); // Get today's date to highlight todays date
+    
     //For each month...
     for (let month = 0; month < 12; month++) {
 
@@ -440,6 +456,10 @@ function createCompactCalendar(year, leaveDates) {
                     calendarTooltip.style.display = 'none';
                 });
             }
+            // Check if the current cell represents today's date
+            if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
+                dayCell.classList.add('today'); // Add the 'today' class
+            }
             //Style for Saturdays and Sundays
             if ((firstDay + date - 1) % 7 === 0 || (firstDay + date - 1) % 7 === 6) {
                 dayCell.classList.add('weekend');  
@@ -471,6 +491,37 @@ function createCompactCalendar(year, leaveDates) {
     }
     table.insertBefore(headerRow, table.firstChild);
     calendarContainer.appendChild(table);
+
+    // Create the legend
+    const legend = document.createElement('div');
+    legend.id = 'calendar-legend';
+
+    const legendItems = [
+        { class: 'weekend', label: 'Weekend' },
+        { class: 'annual-leave', label: 'Annual Leave' },
+        { class: 'flexi-leave', label: 'Flexi Leave' },
+        { class: 'public-holidays', label: 'Public Holidays' },
+        { class: 'sickness-leave', label: 'Sickness Leave' },
+        { class: 'other-leave', label: 'Other (hover date to see full details)' }
+    ];
+
+    legendItems.forEach(item => {
+        const legendItem = document.createElement('div');
+        legendItem.className = 'calendar-legend-item';
+
+        const legendColor = document.createElement('div');
+        legendColor.className = 'calendar-legend-color';
+        legendColor.classList.add(item.class);
+
+        const legendLabel = document.createElement('span');
+        legendLabel.textContent = item.label;
+
+        legendItem.appendChild(legendColor);
+        legendItem.appendChild(legendLabel);
+        legend.appendChild(legendItem);
+    });
+
+    calendarContainer.appendChild(legend);
 }
 
 //Get the leave dates from the table of absences
