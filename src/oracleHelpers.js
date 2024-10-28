@@ -134,9 +134,12 @@ function timeCard_dailyHoursTotal(){
     dateRows.forEach(container => {
         // Find the date and hours elements
         const dateElement = container.querySelector('.xng td');
-        const hoursElement = container.querySelector('span');
-    
+        const hoursElement = container.querySelector('.Apps4XLargeFontSize');
+
         if (dateElement && hoursElement) {
+            console.log(dateElement.textContent.trim());
+            console.log(hoursElement.textContent.trim());
+            
             const date = dateElement.textContent.trim();
             const hours = parseFloat(hoursElement.textContent.trim());
     
@@ -331,6 +334,9 @@ function addCalendarDom(){
                 max-height: 90vh;
                 overflow: auto;
             }
+            #calendar-nav button{
+                margin: 0 10px 0 0;
+            }
             #calendar-popup-close {
                 position: absolute;
                 top: 10px;
@@ -406,9 +412,22 @@ function createCompactCalendar(year, leaveDates) {
     var calendarContainer = document.getElementById('calendar-container');
     calendarContainer.innerHTML = '';
 
+    // Add navigation buttons
+    const calendarNav = document.createElement('div');
+    calendarNav.id = 'calendar-nav';
+    const prevButton = document.createElement('button');
+    prevButton.textContent = 'Previous Year';
+    prevButton.onclick = () => createCompactCalendar(year - 1, leaveDates);
+    calendarNav.appendChild(prevButton);
+    const nextButton = document.createElement('button');
+    nextButton.textContent = 'Next Year';
+    nextButton.onclick = () => createCompactCalendar(year + 1, leaveDates);
+    calendarNav.appendChild(nextButton);
+    calendarContainer.appendChild(calendarNav);
+
     //Add the intro/header
     const header = document.createElement('h2');
-    header.innerHTML = "Existing Absences Yearly Calendar";
+    header.innerHTML = `Existing Absences Yearly Calendar (${year})`;
     calendarContainer.append(header);
     const intro = document.createElement('p');
     intro.innerHTML = "This calendar will only display the absences loaded in the table. Please ensure 'all' is selected from the date range and that all absences have been loaded by clicking 'Load More Items' as many times are required.";
