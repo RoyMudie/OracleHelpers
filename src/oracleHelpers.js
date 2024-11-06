@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v3...")
+console.log("Loading OracleHelpers v3.1 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -221,18 +221,14 @@ function calculateClockedInHours(times) {
 
 //Function to convert deciaml hours into readable hours and minutes
 function convertDecimalHoursToHoursMinutes(decimalHours) {
-    /*const hours = Math.floor(decimalHours);
-    const minutes = Math.round((decimalHours % 1) * 60);
-    return `${hours}h ${minutes}m`;*/
-
-    const sign = decimalHours < 0 ? -1 : 1; 
+    const sign = decimalHours < 0 ? "-" : ""; 
     const absoluteHours = Math.floor(Math.abs(decimalHours));
     const absoluteMinutes = Math.round((Math.abs(decimalHours) % 1) * 60);
     
-    const hours = absoluteHours * sign;
-    const minutes = absoluteMinutes * sign;
+    const hours = absoluteHours;
+    const minutes = absoluteMinutes;
 
-    return `${hours}h ${Math.abs(minutes)}m`
+    return `${sign}${hours}h ${Math.abs(minutes)}m`
 }
 
 // Show Total Elasped Time on Webclock page
