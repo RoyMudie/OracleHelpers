@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v3.1 ...")
+console.log("Loading OracleHelpers v4.0 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -602,21 +602,39 @@ function parseLeaveDates() {
 
 //Show the existing absences yearly calendar
 function existingAbsences_showCalendar(){
-    //Add calendar dom elements if they don't exist
-    addCalendarDom();
+    //Calendar is a big computationally so only do this if on the Existing Absences page
+    document.querySelectorAll('h1').forEach(header => {
+        if (header.innerHTML.includes("Existing Absences")) {
     
-    //Check if we're already displaying the calendar, and if so, exit;
-    var calendarPopup = document.getElementById('calendar-popup');
-    if(calendarPopup.style.display == 'block') return;
-    
-    //Get the current year
-    const currentYear = new Date().getFullYear();
-    //Get all the leave dates
-    const leaveDates = parseLeaveDates();
+            //Add calendar dom elements if they don't exist
+            addCalendarDom();
+            
+            //Check if we're already displaying the calendar, and if so, exit;
+            var calendarPopup = document.getElementById('calendar-popup');
+            if(calendarPopup.style.display == 'block') return;
+            
+            //Get the current year
+            const currentYear = new Date().getFullYear();
+            //Get all the leave dates
+            const leaveDates = parseLeaveDates();
+        
+            //Create the calendar and display it
+            createCompactCalendar(currentYear, leaveDates);   
+            calendarPopup.style.display = 'block';   
+        }
+    });
+}
 
-    //Create the calendar and display it
-    createCompactCalendar(currentYear, leaveDates);   
-    calendarPopup.style.display = 'block';       
+/////////////////////////////////////////////////////////////////////////////////////////
+// Payslip
+/////////////////////////////////////////////////////////////////////////////////////////
+
+//Expanding the payslip window so that it's bigger than 600px tall so that it's easier to read
+function payslip_ExpandWindow(){
+    var payslipDiv = document.querySelector('div[id*="DorUpl:UPsp1:atPsl"]');
+    if (payslipDiv == null) return;
+
+    payslipDiv.style.height = '750px';
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -628,10 +646,5 @@ timeCard_dailyHoursTotal();
 timeCard_showAccurateReportedHours();
 webClock_showTotalElaspedTime();
 globalNumberChange();
-
-//Calendar is a big so only do this if on the Existing Absences page
-document.querySelectorAll('h1').forEach(header => {
-    if (header.innerHTML.includes("Existing Absences")) {
-        existingAbsences_showCalendar();
-    }
-});
+existingAbsences_showCalendar();
+payslip_ExpandWindow();
