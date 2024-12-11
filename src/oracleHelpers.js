@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v4.0 ...")
+console.log("Loading OracleHelpers v4.1 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -239,8 +239,8 @@ function webClock_showTotalElaspedTime(){
     const timeDisplay = document.querySelector("[id$='digitalDuration']");
     if(timeDisplay == null) return;
 
-    //Exit if we've already added it
-    if(timeDisplay.innerHTML.includes(startString)) return;
+    //If we're already displaying the time, then remove the string so we can update the time if the user has selected a different day
+    timeDisplay.innerHTML = timeDisplay.innerHTML.replace(/ \(.*?\)/g, "");
     
     // Get clocking table in HTML
     const clockingTable = document.querySelector("[id$='PSErlt']");
