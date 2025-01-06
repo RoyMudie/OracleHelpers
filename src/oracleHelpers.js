@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v4.1 ...")
+console.log("Loading OracleHelpers v5.0 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -402,7 +402,7 @@ function addCalendarDom(){
     }
 }
 
-function createCompactCalendar(year, leaveDates) {
+function createCompactCalendar(year, leaveDates, sickAbsencesSummary) {
 
     //Clear the calendar object
     var calendarContainer = document.getElementById('calendar-container');
@@ -413,11 +413,11 @@ function createCompactCalendar(year, leaveDates) {
     calendarNav.id = 'calendar-nav';
     const prevButton = document.createElement('button');
     prevButton.textContent = 'Previous Year';
-    prevButton.onclick = () => createCompactCalendar(year - 1, leaveDates);
+    prevButton.onclick = () => createCompactCalendar(year - 1, leaveDates, sickAbsencesSummary);
     calendarNav.appendChild(prevButton);
     const nextButton = document.createElement('button');
     nextButton.textContent = 'Next Year';
-    nextButton.onclick = () => createCompactCalendar(year + 1, leaveDates);
+    nextButton.onclick = () => createCompactCalendar(year + 1, leaveDates, sickAbsencesSummary);
     calendarNav.appendChild(nextButton);
     calendarContainer.appendChild(calendarNav);
 
@@ -425,6 +425,9 @@ function createCompactCalendar(year, leaveDates) {
     const header = document.createElement('h2');
     header.innerHTML = `Existing Absences Yearly Calendar (${year})`;
     calendarContainer.append(header);
+    const sickSummary = document.createElement('h3');
+    sickSummary.innerHTML = `${sickAbsencesSummary}`;
+    calendarContainer.append(sickSummary);
     const intro = document.createElement('p');
     intro.innerHTML = "This calendar will only display the absences loaded in the table. Please ensure 'all' is selected from the date range and that all absences have been loaded by clicking 'Load More Items' as many times are required.";
     calendarContainer.append(intro);
@@ -600,6 +603,45 @@ function parseLeaveDates() {
     return leaveDates;
 }
 
+//Creates a rolling yearly summary of sick days to display on the calendar
+function getSickAbsencesSummary(leaveDates, threshold = 11) {
+    const today = new Date();
+    let oneYearAgo = new Date(today);
+    oneYearAgo.setDate(today.getDate() - 365);
+
+    // Find the earliest leave date
+    const leaveDatesArray = Object.keys(leaveDates).map(dateStr => new Date(dateStr));
+    if (leaveDatesArray.length > 0) {
+        const earliestLeaveDate = new Date(Math.min(...leaveDatesArray));
+        if (earliestLeaveDate > oneYearAgo) {
+            oneYearAgo = earliestLeaveDate;
+        }
+    }
+
+    let sickDays = 0;
+    for (const dateStr in leaveDates) {
+        const date = new Date(dateStr);
+        if (date >= oneYearAgo && date <= today) {
+            leaveDates[dateStr].forEach(leave => {
+                if (leave.class === 'sickness-leave') {
+                    sickDays++;
+                }
+            });
+        }
+    }
+
+    const startDate = oneYearAgo.toLocaleDateString('en-GB');
+    const endDate = today.toLocaleDateString('en-GB');
+    const daysBetween = Math.floor((today - oneYearAgo) / (1000 * 60 * 60 * 24));
+    const summaryText = `Sick Days: ${sickDays} days sick between ${startDate} and ${endDate} (${daysBetween} days)`;
+
+    if (sickDays >= threshold) {
+        return `<span style="color: red;">${summaryText}</span>`;
+    } else {
+        return summaryText;
+    }
+}
+
 //Show the existing absences yearly calendar
 function existingAbsences_showCalendar(){
     //Calendar is a big computationally so only do this if on the Existing Absences page
@@ -617,9 +659,10 @@ function existingAbsences_showCalendar(){
             const currentYear = new Date().getFullYear();
             //Get all the leave dates
             const leaveDates = parseLeaveDates();
+            const sickAbsencesSummary = getSickAbsencesSummary(leaveDates);
         
             //Create the calendar and display it
-            createCompactCalendar(currentYear, leaveDates);   
+            createCompactCalendar(currentYear, leaveDates, sickAbsencesSummary);   
             calendarPopup.style.display = 'block';   
         }
     });
