@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v5.0 ...")
+console.log("Loading OracleHelpers v5.1 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -550,7 +550,7 @@ function parseLeaveDates() {
     //For each absence row
     rows.forEach(row => {
         //Get the type of leave
-        const leaveType = row.querySelector('.x2ku')?.textContent.toLowerCase();
+        const leaveType = row.textContent.toLowerCase();
         //Add class bvased on type of leave
         const leaveClass = leaveType.includes('annual leave') ? 'annual-leave' :
                           leaveType.includes('flexi leave') ? 'flexi-leave' :
@@ -560,7 +560,7 @@ function parseLeaveDates() {
                           '';
         if (leaveClass) {
             //If we have identified an absence
-            const dateSpans = row.querySelectorAll('.x2vz');
+            const dateSpans = row.querySelectorAll('.x2w2');
 
             //Parse the start and end dates basd on the format
             const startDateString = dateSpans[0]?.textContent;
@@ -633,7 +633,11 @@ function getSickAbsencesSummary(leaveDates, threshold = 11) {
     const startDate = oneYearAgo.toLocaleDateString('en-GB');
     const endDate = today.toLocaleDateString('en-GB');
     const daysBetween = Math.floor((today - oneYearAgo) / (1000 * 60 * 60 * 24));
-    const summaryText = `Sick Days: ${sickDays} days sick between ${startDate} and ${endDate} (${daysBetween} days)`;
+    let summaryText = '';
+    if (daysBetween > 0)
+        summaryText = `Sick Days: ${sickDays} days sick between ${startDate} and ${endDate} (${daysBetween} days)`;
+    else
+        summaryText = `Sick Days: ${sickDays} days sick found.`;
 
     if (sickDays >= threshold) {
         return `<span style="color: red;">${summaryText}</span>`;
