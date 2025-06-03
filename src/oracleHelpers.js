@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v5.1 ...")
+console.log("Loading OracleHelpers v5.2 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -560,7 +560,7 @@ function parseLeaveDates() {
                           '';
         if (leaveClass) {
             //If we have identified an absence
-            const dateSpans = row.querySelectorAll('.x2w2');
+            const dateSpans = row.querySelectorAll('.x2ti');
 
             //Parse the start and end dates basd on the format
             const startDateString = dateSpans[0]?.textContent;
