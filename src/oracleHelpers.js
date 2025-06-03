@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v5.2 ...")
+console.log("Loading OracleHelpers v5.3 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -550,7 +550,7 @@ function parseLeaveDates() {
     //For each absence row
     rows.forEach(row => {
         //Get the type of leave
-        const leaveType = row.textContent.toLowerCase();
+        const leaveType = row.querySelector('span').textContent.toLocaleLowerCase();
         //Add class bvased on type of leave
         const leaveClass = leaveType.includes('annual leave') ? 'annual-leave' :
                           leaveType.includes('flexi leave') ? 'flexi-leave' :
