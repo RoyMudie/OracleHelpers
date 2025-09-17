@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v5.3 ...")
+console.log("Loading OracleHelpers v5.4 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -422,14 +422,14 @@ function createCompactCalendar(year, leaveDates, sickAbsencesSummary) {
     calendarContainer.appendChild(calendarNav);
 
     //Add the intro/header
-    const header = document.createElement('h2');
+    const header = document.createElement('h3');
     header.innerHTML = `Existing Absences Yearly Calendar (${year})`;
     calendarContainer.append(header);
-    const sickSummary = document.createElement('h3');
+    const sickSummary = document.createElement('h5');
     sickSummary.innerHTML = `${sickAbsencesSummary}`;
     calendarContainer.append(sickSummary);
     const intro = document.createElement('p');
-    intro.innerHTML = "This calendar will only display the absences loaded in the table. Please ensure 'all' is selected from the date range and that all absences have been loaded by clicking 'Load More Items' as many times are required.";
+    intro.innerHTML = "This calendar will only display the absences loaded in the table.";
     calendarContainer.append(intro);
     
     var longestMonth = 0;
@@ -546,11 +546,19 @@ function createCompactCalendar(year, leaveDates, sickAbsencesSummary) {
 function parseLeaveDates() {
     const leaveDates = {};
     //Get all the absences rows
-    const rows = document.querySelectorAll('.xjb');
+    const rows = document.querySelectorAll('.oj-listview-item');
     //For each absence row
     rows.forEach(row => {
         //Get the type of leave
-        const leaveType = row.querySelector('span').textContent.toLocaleLowerCase();
+        var leaveType = row.querySelector('.oj-typography-body-md');
+        if(leaveType == null)
+            return;
+        leaveType = leaveType.textContent.toLocaleLowerCase().trim();
+
+        //Get the number of hours
+        var leaveHours = row.querySelector('.oj-text-color-secondary');
+        leaveType = leaveType + " (" + leaveHours.textContent.trim() + ")";
+        
         //Add class bvased on type of leave
         const leaveClass = leaveType.includes('annual leave') ? 'annual-leave' :
                           leaveType.includes('flexi leave') ? 'flexi-leave' :
@@ -560,11 +568,11 @@ function parseLeaveDates() {
                           '';
         if (leaveClass) {
             //If we have identified an absence
-            const dateSpans = row.querySelectorAll('.x2ti');
+            const dateSpans = row.querySelectorAll('span');
 
             //Parse the start and end dates basd on the format
             const startDateString = dateSpans[0]?.textContent;
-            const endDateString = dateSpans[dateSpans.length - 1]?.textContent;
+            const endDateString = dateSpans[1]?.textContent;
             var startDate = null;
             var endDate = null;
             if(startDateString.length <= 8){
