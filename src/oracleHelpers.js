@@ -1,4 +1,4 @@
-console.log("Loading OracleHelpers v5.4 ...")
+console.log("Loading OracleHelpers v5.5 ...")
 
 //Set your number of working hours per day (for part time working, probably best just set at your maximum length of day)
 const workingHoursPerDay='7';
@@ -549,6 +549,13 @@ function parseLeaveDates() {
     const rows = document.querySelectorAll('.oj-listview-item');
     //For each absence row
     rows.forEach(row => {
+
+        // Only include approved leave records
+        const approvedBadge = row.querySelector('.oj-badge')?.innerText?.trim();
+        if (approvedBadge !== "Scheduled" && approvedBadge !== "Completed") {
+            return;
+        }
+
         //Get the type of leave
         var leaveType = row.querySelector('.oj-typography-body-md');
         if(leaveType == null)
@@ -559,12 +566,12 @@ function parseLeaveDates() {
         var leaveHours = row.querySelector('.oj-text-color-secondary');
         leaveType = leaveType + " (" + leaveHours.textContent.trim() + ")";
         
-        //Add class bvased on type of leave
+        //Add class based on type of leave
         const leaveClass = leaveType.includes('annual leave') ? 'annual-leave' :
                           leaveType.includes('flexi leave') ? 'flexi-leave' :
                           leaveType.includes('public & privilege holidays') ? 'public-holidays' :
                           leaveType.includes('sickness leave') ? 'sickness-leave' : 
-                          leaveType.includes('hours') ? 'other-leave' : 
+                          leaveType.includes('') ? 'other-leave' : 
                           '';
         if (leaveClass) {
             //If we have identified an absence
